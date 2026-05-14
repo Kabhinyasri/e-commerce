@@ -18,7 +18,8 @@ function App() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/stats`);
+      const response = await fetch("/api/stats");
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setStats(data);
     } catch (error) {

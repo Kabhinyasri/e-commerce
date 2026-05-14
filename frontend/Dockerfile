@@ -10,7 +10,6 @@ COPY public ./public
 COPY src ./src
 
 # FIX: Set to a relative path or your actual Kubernetes external domain
-ENV REACT_APP_API_URL=/ 
 RUN npm run build
 
 # Production stage

@@ -13,7 +13,8 @@ function OrderList() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/orders`);
+      const response = await fetch("/api/orders");
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setOrders(data);
       setError(null);
