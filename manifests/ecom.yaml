@@ -77,7 +77,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: kabhinyasri1911/ecommerce-frontend:v3
+        image: kabhinyasri1911/ecommerce-frontend:v4
         ports:
         - containerPort: 3000
         resources:
