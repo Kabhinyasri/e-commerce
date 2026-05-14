@@ -1,18 +1,17 @@
 Scenario 1: Black Friday OOMKilled
 
 # Break
-kubectl set resources deployment frontend-app --limits=memory=5Mi -n demo
+kubectl set resources deployment frontend-app --limits=memory=5Mi --requests=memory=5Mi -n demo
 # Fix
-kubectl set resources deployment frontend-app --limits=memory=256Mi -n demo
+kubectl set resources deployment frontend-app --limits=memory=256Mi --requests=memory=128Mi -n demo
 
 
 Scenario 2: Dynamic Pricing CPU Throttling
 
 # Break
-kubectl set resources deployment backend-api --limits=cpu=1m -n demo
+kubectl set resources deployment backend-api --limits=cpu=1m --requests=cpu=1m -n demo2
 # Fix
-kubectl set resources deployment backend-api --limits=cpu=500m -n demo
-
+kubectl set resources deployment backend-api --limits=cpu=500m --requests=cpu=100m -n demo2
 
 Scenario 3: Microservice Outage
 
@@ -55,3 +54,30 @@ kubectl exec -it deployment/backend-api -n demo -- /bin/sh -c "dd if=/dev/zero o
 kubectl exec -it deployment/backend-api -n demo -- rm /app/data/dummy_data.bin
 
 
+
+
+
+# 1. Set the URL to your Ingress IP
+$baseUrl = "http://10.55.56.19"
+
+# 2. Define the protected endpoints the hacker is targeting
+$protectedEndpoints = @("/api/admin/dashboard", "/api/orders")
+
+Write-Host "Initiating Admin API Brute-Force Simulation..." -ForegroundColor Red
+
+# 3. Run a loop 50 times to brute-force the X-Admin-Key
+1..50 | ForEach-Object {
+    $endpoint = $protectedEndpoints | Get-Random
+    $targetUrl = "$baseUrl$endpoint"
+    $fakeKey = "admin-key-guess-$_"
+
+    try {
+        # The hacker sends the request with a guessed password
+        Invoke-RestMethod -Uri $targetUrl -Headers @{"X-Admin-Key"="$fakeKey"} -ErrorAction SilentlyContinue | Out-Null
+    } catch {
+        # When your Python backend rejects it, it prints this yellow message
+        Write-Host "Unauthorized Access Attempt: $targetUrl with key '$fakeKey' - Blocked" -ForegroundColor Yellow
+    }
+    # Pause for 150ms to simulate a bot
+    Start-Sleep -Milliseconds 150 
+}

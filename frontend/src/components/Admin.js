@@ -16,13 +16,12 @@ function Admin({ onBack }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
   // Admin Login
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/api/admin/login`, {
+      const response = await fetch("/api/admin/login", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ api_key: adminKey })
@@ -48,8 +47,8 @@ function Admin({ onBack }) {
     try {
       const key = localStorage.getItem('adminKey') || adminKey;
       const [productsRes, ordersRes] = await Promise.all([
-        fetch(`${API_URL}/api/products`),
-        fetch(`${API_URL}/api/orders`, {
+        fetch("/api/products"),
+        fetch("/api/orders", {
           headers: { 'X-Admin-Key': key }
         })
       ]);
@@ -84,8 +83,8 @@ function Admin({ onBack }) {
     try {
       const method = editingId ? 'PUT' : 'POST';
       const url = editingId 
-        ? `${API_URL}/api/products/${editingId}`
-        : `${API_URL}/api/products`;
+        ? `/api/products/${editingId}`
+        : `/api/products`;
       
       const response = await fetch(url, {
         method,
@@ -132,7 +131,7 @@ function Admin({ onBack }) {
     if (window.confirm('Are you sure?')) {
       const key = localStorage.getItem('adminKey') || adminKey;
       try {
-        const response = await fetch(`${API_URL}/api/products/${productId}`, {
+        const response = await fetch(`/api/products/${productId}`, {
           method: 'DELETE',
           headers: { 'X-Admin-Key': key }
         });
@@ -151,7 +150,7 @@ function Admin({ onBack }) {
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     const key = localStorage.getItem('adminKey') || adminKey;
     try {
-      const response = await fetch(`${API_URL}/api/orders/${orderId}`, {
+      const response = await fetch(`/api/orders/${orderId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
