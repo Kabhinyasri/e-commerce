@@ -1,17 +1,21 @@
 Scenario 1: Black Friday OOMKilled
 
-# Break
-kubectl set resources deployment frontend-app --limits=memory=5Mi --requests=memory=5Mi -n demo
-# Fix
-kubectl set resources deployment frontend-app --limits=memory=256Mi --requests=memory=128Mi -n demo
+kubectl exec deployment/frontend-app -n demo -- /bin/sh -c 'a=1; while true; do a=$a$a; done'
+
+kube_pod_container_status_last_terminated_reason{reason="OOMKilled", namespace="demo"}
+
 
 
 Scenario 2: Dynamic Pricing CPU Throttling
 
-# Break
-kubectl set resources deployment backend-api --limits=cpu=1m --requests=cpu=1m -n demo2
-# Fix
-kubectl set resources deployment backend-api --limits=cpu=500m --requests=cpu=100m -n demo2
+kubectl exec deployment/backend-api -n demo -- /bin/sh -c 'for i in 1 2 3 4; do while true; do x=1; done & done; wait'
+
+kubectl delete pods -l app=backend-api -n demo
+
+
+rate(container_cpu_usage_seconds_total{namespace="demo"}[1m])
+rate(container_cpu_usage_seconds_total{namespace="demo", container="backend"}[1m])
+
 
 Scenario 3: Microservice Outage
 
@@ -21,63 +25,6 @@ kubectl apply -f nw-block.yaml -n demo
 kubectl delete networkpolicy block-backend-access -n demo
 
 
-Scenario 4: Security Threat (Brute-Force Script)
+Run this query to search the whole cluster for Traefik Ingress timeouts: 
+{namespace=~".+"} |= " 504 " |= "/api/stats"
 
-# 1. First, get your backend service IP or port-forward
-kubectl port-forward svc/backend-service 5000:5000 -n demo
-
-# 2. Run the brute force in a separate PowerShell tab
-$baseUrl = "http://localhost:5000"
-$protectedEndpoints = @("/api/admin/dashboard", "/api/orders")
-
-Write-Host "Initiating Admin API Brute-Force Simulation..." -ForegroundColor Red
-1..50 | ForEach-Object {
-    $endpoint = $protectedEndpoints | Get-Random
-    $targetUrl = "$baseUrl$endpoint"
-    $fakeKey = "admin-key-guess-$_"
-    
-    try {
-        Invoke-RestMethod -Uri $targetUrl -Headers @{"X-Admin-Key"="$fakeKey"} -ErrorAction SilentlyContinue | Out-Null
-    } catch {
-        Write-Host "Unauthorized Access Attempt: $targetUrl with key '$fakeKey' - Blocked" -ForegroundColor Yellow
-    }
-    Start-Sleep -Milliseconds 150 
-}
-
-
-Scenario 5: Proactive Storage Alert
-
-# Break (Fill the disk)
-kubectl exec -it deployment/backend-api -n demo -- /bin/sh -c "dd if=/dev/zero of=/app/data/dummy_data.bin bs=1M count=42"
-
-# Fix (Clear the disk)
-kubectl exec -it deployment/backend-api -n demo -- rm /app/data/dummy_data.bin
-
-
-
-
-
-# 1. Set the URL to your Ingress IP
-$baseUrl = "http://10.55.56.19"
-
-# 2. Define the protected endpoints the hacker is targeting
-$protectedEndpoints = @("/api/admin/dashboard", "/api/orders")
-
-Write-Host "Initiating Admin API Brute-Force Simulation..." -ForegroundColor Red
-
-# 3. Run a loop 50 times to brute-force the X-Admin-Key
-1..50 | ForEach-Object {
-    $endpoint = $protectedEndpoints | Get-Random
-    $targetUrl = "$baseUrl$endpoint"
-    $fakeKey = "admin-key-guess-$_"
-
-    try {
-        # The hacker sends the request with a guessed password
-        Invoke-RestMethod -Uri $targetUrl -Headers @{"X-Admin-Key"="$fakeKey"} -ErrorAction SilentlyContinue | Out-Null
-    } catch {
-        # When your Python backend rejects it, it prints this yellow message
-        Write-Host "Unauthorized Access Attempt: $targetUrl with key '$fakeKey' - Blocked" -ForegroundColor Yellow
-    }
-    # Pause for 150ms to simulate a bot
-    Start-Sleep -Milliseconds 150 
-}
